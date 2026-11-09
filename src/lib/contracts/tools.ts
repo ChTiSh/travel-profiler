@@ -24,7 +24,9 @@ export const ProfileUpdateItemSchema = z.object({
   field: ProfileFieldSchema,
   op: z
     .enum(["set", "add", "remove"])
-    .describe("`set` for single-value fields; `add` or `remove` items for list fields"),
+    .describe(
+      "`set` replaces the whole value (single-value or list field). `add`/`remove` change items of a list field. Use `set` when a new value replaces an old one (e.g. vegetarian → vegan).",
+    ),
   value: z
     .union([z.string(), z.number(), z.array(z.string())])
     .describe("The value to set, or the item(s) to add/remove"),

@@ -46,7 +46,7 @@ export type ProfileConflict = z.infer<typeof ProfileConflictSchema>;
  */
 export type ProfileUpdateProposal =
   | { field: SingleValueField; op: "set"; value: string | number; evidence: string }
-  | { field: ListField; op: "add" | "remove"; items: string[]; evidence: string };
+  | { field: ListField; op: "add" | "remove" | "set"; items: string[]; evidence: string };
 
 /** Outcome of merging one proposal into the profile. Only `applied` changes stored values. */
 export type MergeResult =
