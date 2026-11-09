@@ -47,7 +47,7 @@ export function ChatPanel({ messages, status, error, view, onSend, onStop, onRet
           </li>
         ))}
         {status === "submitted" && (
-          <li className="text-sm text-neutral-500" aria-hidden="true">
+          <li className="text-sm text-ink-muted" aria-hidden="true">
             Thinking…
           </li>
         )}
@@ -55,7 +55,7 @@ export function ChatPanel({ messages, status, error, view, onSend, onStop, onRet
       </ol>
 
       {error && (
-        <div role="alert" className="mb-3 rounded-lg border border-red-400 bg-red-50 p-3 text-sm dark:bg-red-950/40">
+        <div role="alert" className="mb-3 rounded-lg border border-red-400 bg-red-50 p-3 text-sm">
           <p>
             <span className="font-semibold">Couldn&apos;t get a reply. </span>
             {error.message}
@@ -78,7 +78,7 @@ export function ChatPanel({ messages, status, error, view, onSend, onStop, onRet
           e.preventDefault();
           submit();
         }}
-        className="flex items-end gap-2 border-t border-neutral-200 pt-3 dark:border-neutral-800"
+        className="flex items-end gap-2 border-t border-line pt-3"
       >
         <div className="flex-1">
           <label htmlFor={inputId} className="mb-1 block text-sm font-medium">
@@ -98,7 +98,7 @@ export function ChatPanel({ messages, status, error, view, onSend, onStop, onRet
             maxLength={4000}
             aria-describedby={`${inputId}-hint`}
             placeholder="e.g. I'm vegetarian, fly out of SEA, and like a slow pace"
-            className="w-full resize-none rounded-lg border border-neutral-400 bg-white p-2 dark:bg-neutral-900"
+            className="w-full resize-none rounded-lg border border-ink-disabled bg-surface p-2"
           />
           <p id={`${inputId}-hint`} className="sr-only">
             Press Enter to send, Shift+Enter for a new line.
@@ -123,7 +123,7 @@ function Greeting({ view }: { view: ProfileView | null }) {
   const missing = view ? missingCoreFields(view.profile) : [];
   const returning = view && missing.length < 7;
   return (
-    <div className="max-w-prose rounded-lg bg-neutral-100 p-3 dark:bg-neutral-900">
+    <div className="max-w-prose rounded-lg border border-line bg-surface p-3">
       {returning ? (
         <p>
           Welcome back! Your profile is saved on the right.{" "}
@@ -149,7 +149,7 @@ function Message({ message }: { message: ChatUIMessage }) {
   if (!visible) return null;
   return (
     <div
-      className={`max-w-prose rounded-lg p-3 ${isUser ? "bg-blue-600 text-white" : "bg-neutral-100 dark:bg-neutral-900"}`}
+      className={`max-w-prose rounded-lg p-3 ${isUser ? "bg-brand text-white" : "border border-line bg-surface"}`}
     >
       <span className="sr-only">{isUser ? "You said:" : "Assistant said:"}</span>
       {message.parts.map((part, i) => {
@@ -162,7 +162,7 @@ function Message({ message }: { message: ChatUIMessage }) {
         }
         const chip = toolChip(part);
         return chip ? (
-          <p key={i} className="my-1 text-xs text-neutral-600 dark:text-neutral-400">
+          <p key={i} className="my-1 text-xs text-ink-muted">
             <span aria-hidden="true">• </span>
             {chip}
           </p>

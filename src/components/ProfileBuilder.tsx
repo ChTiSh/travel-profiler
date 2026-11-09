@@ -89,7 +89,7 @@ export function ProfileBuilder() {
     <main className="mx-auto grid h-dvh w-full max-w-6xl grid-rows-[auto_1fr] gap-4 p-4 md:grid-cols-[1fr_22rem] md:grid-rows-[auto_minmax(0,1fr)]">
       <header className="md:col-span-2">
         <h1 className="text-xl font-semibold">Profile Builder</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm text-ink-muted">
           Chat about how you travel; your durable travel profile builds itself as you go.
         </p>
       </header>
@@ -110,7 +110,7 @@ export function ProfileBuilder() {
         />
       </section>
 
-      <aside aria-labelledby="profile-heading" className="overflow-y-auto rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+      <aside aria-labelledby="profile-heading" className="overflow-y-auto rounded-lg border border-line bg-surface p-4">
         <h2 id="profile-heading" className="mb-3 text-lg font-semibold">
           Your travel profile
         </h2>

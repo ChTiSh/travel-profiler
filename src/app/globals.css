@@ -1,41 +1,46 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/*
+ * Brand palette as semantic tokens (bg-brand, text-ink, ...). Contrast checked
+ * against WCAG AA (A1):
+ *   white on brand        4.65:1  (buttons, user bubbles)
+ *   ink on canvas        13.9:1
+ *   ink-muted on canvas   4.88:1  derived: the given "disabled" grey is 3.36:1, fine for
+ *                                 disabled controls (exempt) but too light for informational text
+ *   brand on surface      4.65:1  brand-colored text only on white, never on canvas (4.10:1)
+ *   brand-hover           6.0:1   with white text
+ * Light-only: the palette has no dark variant (dark mode is a noted follow-up).
+ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-brand: rgb(6 134 73);
+  --color-brand-hover: rgb(5 114 62);
+  --color-canvas: rgb(243 240 236);
+  --color-surface: rgb(255 255 255);
+  --color-ink: rgb(44 32 26);
+  --color-ink-muted: rgb(110 103 100);
+  --color-ink-disabled: rgb(137 129 125);
+  --color-line: rgb(222 215 207);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-canvas);
+  color: var(--color-ink);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
-/* A1: a clearly visible keyboard focus ring on every interactive element. */
+/* A1: a clearly visible keyboard focus ring on every interactive element (brand on canvas: 4.1:1, above the 3:1 needed). */
 :where(button, textarea, input, a, [tabindex]):focus-visible {
-  outline: 3px solid #2563eb;
+  outline: 3px solid var(--color-brand);
   outline-offset: 2px;
 }
 
 @layer components {
   .btn {
-    @apply rounded-md border border-neutral-400 bg-white px-3 py-1.5 text-sm font-medium text-neutral-900 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700;
+    @apply rounded-md border border-ink-disabled bg-surface px-3 py-1.5 text-sm font-medium text-ink hover:bg-canvas disabled:cursor-not-allowed disabled:border-line disabled:text-ink-disabled disabled:hover:bg-surface;
   }
   .btn-primary {
-    @apply border-blue-700 bg-blue-700 text-white hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500;
+    @apply border-brand bg-brand text-white hover:border-brand-hover hover:bg-brand-hover disabled:bg-surface;
   }
 }

@@ -27,7 +27,7 @@ export function ConflictCard({ conflict, busy, onDecide, onClarify }: Props) {
   return (
     <section
       aria-labelledby={headingId}
-      className="rounded-lg border-2 border-amber-500 bg-amber-50 p-3 text-sm text-neutral-900 dark:bg-amber-950/40 dark:text-neutral-100"
+      className="rounded-lg border-2 border-amber-500 bg-amber-50 p-3 text-sm text-ink"
     >
       <h3 id={headingId} className="font-semibold">
         <span aria-hidden="true">⚠ </span>
@@ -108,7 +108,7 @@ export function ConflictCard({ conflict, busy, onDecide, onClarify }: Props) {
             onChange={(e) => setNote(e.target.value)}
             rows={2}
             placeholder="e.g. It's a one-off for a friend's birthday"
-            className="w-full rounded border border-neutral-400 bg-white p-2 dark:bg-neutral-900"
+            className="w-full rounded border border-ink-disabled bg-surface p-2"
           />
           <button type="submit" disabled={busy || !note.trim()} className="btn btn-primary">
             Send context

@@ -24,7 +24,7 @@ const hasValue = (v: unknown) => (Array.isArray(v) ? v.length > 0 : v !== undefi
 /** Read-only view of the stored profile (R4). Values change only through conversation + approval. */
 export function ProfilePanel({ view, loadError, recentlyUpdated, busy, onDecide, onClarify }: Props) {
   if (loadError) return <p role="alert">{loadError}</p>;
-  if (!view) return <p className="text-neutral-500">Loading your profile…</p>;
+  if (!view) return <p className="text-ink-muted">Loading your profile…</p>;
 
   // Core fields always show (so gaps are visible); other fields only once they have a value.
   const fields = PROFILE_FIELDS.filter(
@@ -48,7 +48,7 @@ export function ProfilePanel({ view, loadError, recentlyUpdated, busy, onDecide,
         </div>
       )}
 
-      <dl className="divide-y divide-neutral-200 dark:divide-neutral-800">
+      <dl className="divide-y divide-line">
         {fields.map((field) => {
           const value = view.profile[field];
           const evidence = view.provenance[field]?.evidence;
@@ -56,16 +56,16 @@ export function ProfilePanel({ view, loadError, recentlyUpdated, busy, onDecide,
           return (
             <div
               key={field}
-              className={`py-2 transition-colors motion-reduce:transition-none ${fresh ? "bg-emerald-50 dark:bg-emerald-950/40" : ""}`}
+              className={`py-2 transition-colors motion-reduce:transition-none ${fresh ? "bg-brand/10" : ""}`}
             >
-              <dt className="text-xs font-medium uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+              <dt className="text-xs font-medium uppercase tracking-wide text-ink-muted">
                 {FIELD_LABELS[field]}
-                {fresh && <span className="ml-2 normal-case text-emerald-700 dark:text-emerald-400">updated</span>}
+                {fresh && <span className="ml-2 font-semibold normal-case text-ink">✓ updated</span>}
               </dt>
-              <dd className={hasValue(value) ? "" : "text-neutral-500 dark:text-neutral-400"}>
+              <dd className={hasValue(value) ? "" : "text-ink-muted"}>
                 {hasValue(value) ? formatValue(value) : "Not yet"}
                 {evidence && (
-                  <span className="block text-xs italic text-neutral-600 dark:text-neutral-400">
+                  <span className="block text-xs italic text-ink-muted">
                     <span className="sr-only">You said: </span>“{evidence}”
                   </span>
                 )}
