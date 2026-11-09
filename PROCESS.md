@@ -82,6 +82,15 @@ Planning decisions (made before writing code):
   - *Decision:* default to `openrouter/free`. Its routing works around rate-limited models, which mattered more in practice than any single model's quality.
     - *Accepted trade-off:* it isn't reproducible, since each request may hit a different model. Mitigation: log the model that actually served each request.
     - *Known cost:* multi-step turns take 5–15 s, sometimes ~27 s. Streaming makes this bearable, but it's slow. A paid model would be the first change at scale.
+- **First live turn found the real constraint: OpenRouter's free tier allows 50 free-model requests per day.** A chat turn uses 2–6 requests (one per tool step), so that's about 10–20 turns a day, and the benchmark had used most of it.
+  - The pipeline itself worked end to end: the tool executed, the log recorded which model actually served the request, and the 429 was classified and streamed as a typed error.
+  - *Bug:* the message said "wait a minute," which is wrong for a daily quota. It now names the daily limit and the real options. Fixed test-first.
+- **Phase 2 structure:**
+  - **Transport (routes):** validation only.
+  - **Business logic:** `lib/profile/service.ts`, shared by the chat tools and the REST conflict route, so the card and the chat can't diverge.
+  - **Agent glue:** `lib/agent/tools.ts`, with no profile rules in it.
+  - **UI:** `components/`. It validates server responses with the same schemas the server uses.
+- **`cacheComponents` is on in this Next 16 scaffold,** so a `GET` route can be prerendered at build time. `GET /api/profile` calls `await connection()` to make "always live" explicit.
 - **Chat history:** not persisted; only the profile is (which is all the requirements ask for). After a reload the chat starts fresh, and its greeting references the saved profile.
 
 ## Manual Review and Verification
