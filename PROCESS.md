@@ -155,6 +155,13 @@ Planning decisions (made before writing code):
   - **UI:** `components/`. It validates server responses with the same schemas the server uses.
 - **`cacheComponents` is on in this Next 16 scaffold,** so a `GET` route can be prerendered at build time. `GET /api/profile` calls `await connection()` to make "always live" explicit.
 - **Chat history:** not persisted; only the profile is (which is all the requirements ask for). After a reload the chat starts fresh, and its greeting references the saved profile.
+- **Brand color theme (provided by me):** CTA `rgb(6,134,73)`, background `rgb(243,240,236)`, text `rgb(44,32,26)`, disabled `rgb(137,129,125)`.
+  - *Contrast check first:* contrast was measured against WCAG AA before applying anything.
+    - Two pairs fail for informational text: the disabled grey on the background (3.36:1), and green text on the background (4.10:1).
+    - *Fix:* the disabled grey is kept for disabled controls, which WCAG exempts, and a darker tone of the same hue is derived for secondary text (4.88:1). Green appears as text only on white surfaces (4.65:1).
+    - The bulk color swap also put the green "updated" label on a green tint (4.08:1); it was caught by recomputing and switched to ink.
+  - *Implementation:* the colors are semantic tokens in `globals.css` (`brand`, `canvas`, `surface`, `ink`, `ink-muted`, `ink-disabled`, `line`), so the palette lives in one place. The app is now light-only, since the palette has no dark variant (a follow-up).
+  - *Verified in the browser* with a seeded profile, no LLM needed: theme, contradiction card (Keep/Clarify only), disabled states, focus ring, and **Keep** persisted through the real REST route (`status: kept`, logged `via: ui`).
 
 ## Manual Review and Verification
 

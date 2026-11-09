@@ -114,6 +114,7 @@ The full reasoning, including what changed during planning and why, is in [PROCE
 - **Screen readers:** landmarks, headings and labelled controls. The conversation is **not** a live region, because streamed tokens would flood a screen reader. Instead, one polite announcer reads the *completed* reply, profile changes ("Profile updated: Dietary needs") and decisions.
 - **Conflict cards:** buttons carry full context ("Approve changing Budget tier from mid-range to luxury"). Conflicts are marked with an icon and text, not color alone.
 - **Motion:** the "updated" highlight respects reduced motion.
+- **Color:** the brand palette (green actions on warm beige) is checked against WCAG AA. The given disabled grey (3.36:1 on the background) is used only for disabled controls, which WCAG exempts. Secondary text uses a darker tone of the same hue (4.88:1). Green is never used for small text directly on the beige (4.10:1), only on white (4.65:1).
 
 ---
 
@@ -132,6 +133,7 @@ The full reasoning, including what changed during planning and why, is in [PROCE
 3. A paid default model for latency, plus prompt caching for the long system prompt.
 4. SQLite or Postgres instead of the JSON file, and chat history persistence.
 5. Voice input and read-aloud (staged plan in [docs/plan.md](docs/plan.md)).
+6. A dark theme. The brand palette is light-only today, and the colors are semantic tokens in `globals.css`, so a dark variant is a token swap.
 
 ## Project structure
 
