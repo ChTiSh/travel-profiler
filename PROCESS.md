@@ -69,9 +69,13 @@ Eight prompts where a real decision was made. The full transcript is in [`transc
   - The first live turn then hit the **50 requests/day** free cap. The error said "wait a minute," which is wrong for a daily cap, and that was fixed too. I chose to wait for the reset rather than pay.
 
 **8. The API key incident: "added to env.local" → "yes, I just went to revoke the key, now rotated with a new key."**
-- *What happened:* I had pasted the real key into `.env.example`, which is committed, and the assistant staged it without looking. That's a tool failure worth recording.
+- *What happened:* two failures by the assistant made one mistake of mine reachable.
+  - *Root cause, an unreviewed config change:* the scaffold's `.gitignore` ignored `.env*`, so a key pasted into `.env.example` would never have been staged. In the setup commit (`24ca1ac`) the assistant added `!.env.example` to make the template committable. It did this without asking and without mentioning it in chat. That was a repo-configuration decision that should have been put to me.
+  - *Trigger, mine:* I pasted the real key into `.env.example`.
+  - *Failure to check:* the assistant staged and committed that file without looking at the diff.
 - *Got back:* it caught the problem on its next check, confirmed nothing had been pushed, amended the local commit, scanned every commit, and added a test that fails if `.env.example` ever has a key value. It also flagged that its own `git diff` had printed the key into this transcript, so the key had to be rotated even though it never left the machine.
 - *Kept / changed:* rotated the key and purged the old objects from git with `reflog expire` + `gc`. **The old key is redacted from the exported transcript.** *TODO(you): confirm the redaction before committing the transcript.*
+- *Decision after the incident:* I chose to **keep `.env.example` tracked as a template**, deliberately this time. The README setup (`cp .env.example .env.local`) depends on it, and the guard test covers the risk. The alternative (ignore it again and list the variables in the README) was offered and declined.
 
 ## Decision Log (chronological)
 
@@ -236,3 +240,12 @@ About 3 turns/second, each with 2–6 model calls and ~3k input tokens per call.
 | 1. Planning + implementation (this session) | Claude Code (VS Code extension) | *TODO(you): `transcripts/claude-code-session-1.*` via `/export`* | **Redact the revoked OpenRouter key** before committing (it appears in a `git diff` output, prompt 8) |
 | Field list suggestion | Google (search AI answer) | n/a | The 20-field list pasted into prompt 6. Not exportable; quoted in the session transcript. |
 | Inline completions | GitHub Copilot | n/a | Not exportable (see `transcripts/README.md`). *TODO(you): remove this row if unused.* |
+
+## Reflection
+Overall approach 
+I choose plan first, given the short time, there is little room for errors or huge direction changes. I did let the agent drive mostly with code and creating the initial plan. I spent most of time reviewing the plan and checking fundamental assumptions with product requirements. I chose to rely more on ai-generated contracts and code with tests to verify the functionalities. 
+
+I went through chat, contracts, llm and destinations folders and left profile folder content honestly not verified. I did check the UI and see the read only list.
+
+What you'd do differently next time?
+I will definitely not accidentally paste api keys into files that could be commited
