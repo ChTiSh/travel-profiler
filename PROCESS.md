@@ -63,6 +63,25 @@ Planning decisions (made before writing code):
   - *Destination lookup is exact, never fuzzy.* I removed "Iceland" as an alias for Reykjavík: a country isn't its capital, and returning the wrong place's facts is worse than `null`.
   - *Store updates run one at a time.* The model can run tools in parallel within one turn. I verified the concurrency test fails when the queue is bypassed. A corrupt store file is moved aside, never deleted.
 - **Provider env vars (option A):** the generic `LLM_API_KEY` / `LLM_MODEL` / `LLM_BASE_URL` from the existing `.env.example`, plus `LLM_PROVIDER` (`anthropic` | `openai-compatible`). Benchmarking an OpenRouter model later is then a config change, not a code change.
+- **Provider order changed: OpenRouter first** (the user's call; Anthropic stays supported). Uses `@ai-sdk/openai-compatible` rather than the OpenRouter-specific SDK, so one code path covers any OpenAI-compatible endpoint.
+- **Model benchmark, moved earlier from Phase 3** ([scripts/benchmark-models.ts](scripts/benchmark-models.ts)): the design depends on free models calling our tools correctly, so I measured that before building the agent on top of it.
+  - *First run:* every model failed the same two checks, in the same way. That pointed at my setup, not the models. Showing what they actually sent revealed `budgetTier="mid-range"` and `dailyPace="slow"`. The loose tool schema never told the model which values are allowed.
+    - *Fix:* a per-field `FIELD_GUIDE`, generated from the same enums as the schema and checked by the compiler to cover every field, so it can't drift.
+    - *Also:* normalization of *spelling only* ("Mid Range" → `midRange`). Meaning ("slow" → `relaxed`) is never mapped in code; it's left to the model, guided by the field guide.
+  - *Second issue:* the benchmark allowed only one step. The real agent can look up Lisbon and *then* flag the conflict, so the benchmark now runs up to 3 steps with stub tools that return the same rejection reasons as the real ones.
+  - *A real app bug found along the way:* rate-limited calls were reported as generic `provider_error`, because the SDK wraps the final failure in a `RetryError`. Fixed with a test that reproduced it first.
+  - *Results (2 runs, n is small):*
+
+    | Model | Run 1 | Run 2 | Median latency |
+    |---|---|---|---|
+    | `openrouter/free` | 4/4 | 4/4 | ~9–14 s |
+    | `nvidia/nemotron-3-ultra-550b-a55b:free` | 4/4 | 1/4 (rate-limited) | ~12 s |
+    | `nvidia/nemotron-3.5-super-vl:free` | 3/4 (missed the contradiction) | — | ~7 s |
+    | `google/gemma-4-31b-it:free` | 0/4 (rate-limited upstream) | — | — |
+
+  - *Decision:* default to `openrouter/free`. Its routing works around rate-limited models, which mattered more in practice than any single model's quality.
+    - *Accepted trade-off:* it isn't reproducible, since each request may hit a different model. Mitigation: log the model that actually served each request.
+    - *Known cost:* multi-step turns take 5–15 s, sometimes ~27 s. Streaming makes this bearable, but it's slow. A paid model would be the first change at scale.
 - **Chat history:** not persisted; only the profile is (which is all the requirements ask for). After a reload the chat starts fresh, and its greeting references the saved profile.
 
 ## Manual Review and Verification

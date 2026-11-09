@@ -8,7 +8,7 @@
  * Reads LLM_* from .env.local (the --env-file flag in package.json). Prints one
  * line per case and a summary table. The API key is never printed.
  */
-import { generateText, tool, type ToolSet } from "ai";
+import { APICallError, generateText, isStepCount, tool, type ToolSet } from "ai";
 import {
   FlagConflictInputSchema,
   GetDestinationInfoInputSchema,
@@ -25,19 +25,28 @@ const DEFAULT_CANDIDATES = [
   "google/gemma-4-31b-it:free",
 ];
 
+// Stub implementations that behave like the real ones where it matters: rejections
+// come back with the same reason text, so a model can correct itself in a later step.
 const tools = {
   getDestinationInfo: tool({
     description: "Look up data for a named destination. Call it whenever the user names a specific place.",
     inputSchema: GetDestinationInfoInputSchema,
+    execute: async ({ name }) => (await getDestinationInfo(name)) ?? { found: false, name },
   }),
   updateProfile: tool({
     description: "Record travel preferences the user stated. Batch every preference from one message into one call.",
     inputSchema: UpdateProfileInputSchema,
+    execute: async ({ updates }) =>
+      updates.map((u) => {
+        const r = parseUpdateItem(u);
+        return r.ok ? { field: u.field, status: "accepted" } : { field: u.field, status: "rejected", reason: r.reason };
+      }),
   }),
   flagConflict: tool({
     description:
       "Call when the user says something at odds with a STORED profile value without stating a new value.",
     inputSchema: FlagConflictInputSchema,
+    execute: async () => ({ status: "recorded; ask the user how to proceed" }),
   }),
 } satisfies ToolSet;
 
@@ -64,7 +73,8 @@ const CASES: Case[] = [
       const valid = new Set(items.filter((i) => parseUpdateItem(i).ok).map((i) => i.field));
       const want = ["dietary", "homeAirport", "budgetTier", "dailyPace"];
       const missing = want.filter((f) => !valid.has(f as never));
-      return missing.length ? `missing/invalid fields: ${missing.join(", ")}` : null;
+      const sent = items.map((i) => `${i.field}=${JSON.stringify(i.value)}`).join(" ");
+      return missing.length ? `missing/invalid fields: ${missing.join(", ")}; sent: ${sent || "nothing"}` : null;
     },
   },
   {
@@ -100,7 +110,8 @@ const CASES: Case[] = [
           UpdateProfileInputSchema.parse(x.input).updates.some((u) => u.field === "dietary"),
       );
       if (flagged) return null;
-      return removed ? "changed dietary via updateProfile instead of flagging" : "contradiction not flagged";
+      if (removed) return "changed dietary via updateProfile instead of flagging";
+      return `contradiction not flagged; called: ${calls.map((c) => c.toolName).join(", ") || "no tools"}`;
     },
   },
 ];
@@ -127,6 +138,7 @@ async function main() {
           instructions: INSTRUCTIONS(JSON.stringify(c.profile)),
           prompt: c.message,
           tools,
+          stopWhen: isStepCount(3), // like the agent: call tools, read results, possibly retry
           maxRetries: 1,
         });
         const calls = result.toolCalls.filter((t) => !t.invalid);
@@ -134,7 +146,11 @@ async function main() {
         verdict = await c.check(calls);
         if (verdict === null && invalid > 0) verdict = `passed, but ${invalid} call(s) had schema-invalid input`;
       } catch (err) {
-        verdict = `error: ${classifyProviderError(err).code}`;
+        // Local diagnostics only: status and the provider's short message, never request headers.
+        const detail = APICallError.isInstance(err)
+          ? ` HTTP ${err.statusCode}: ${(err.responseBody ?? err.message).slice(0, 160)}`
+          : "";
+        verdict = `error: ${classifyProviderError(err).code}${detail}`;
       }
       const ms = Math.round(performance.now() - started);
       summary[model].ms.push(ms);
