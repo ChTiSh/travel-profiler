@@ -2,6 +2,7 @@ import type { UIMessage } from "ai";
 import { z } from "zod";
 import { ProfileViewSchema } from "./api";
 import { ProfileFieldSchema } from "./profile";
+import type { ChatTools } from "./tools";
 
 /**
  * Live profile updates during a turn. Sent as a *transient* data part: it
@@ -26,8 +27,5 @@ export const chatDataPartSchemas = {
 
 export type ChatDataParts = { profile: ProfileDataPart };
 
-/**
- * The single message type for the chat stream on both sides. Tool part types
- * are added as the third type parameter once the tools exist (Phase 2).
- */
-export type ChatUIMessage = UIMessage<never, ChatDataParts>;
+/** The single message type for the chat stream on both sides: text, typed tool parts, and the live profile part. */
+export type ChatUIMessage = UIMessage<never, ChatDataParts, ChatTools>;

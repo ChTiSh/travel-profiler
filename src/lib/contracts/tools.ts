@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { ProfileFieldSchema, describeFields } from "./profile";
+import type { DestinationInfo } from "./destination";
+import { ProfileFieldSchema, describeFields, type ProfileField } from "./profile";
 
 /*
  * LLM-facing tool input schemas. These are deliberately looser than the domain
@@ -60,3 +61,37 @@ export const ResolveConflictInputSchema = z.object({
   ),
 });
 export type ResolveConflictInput = z.infer<typeof ResolveConflictInputSchema>;
+
+/*
+ * Tool outputs: what the model reads back (so it can act on the result) and
+ * what the chat UI renders as tool parts. Each carries an `instruction` for
+ * the model in plain language, so behavior isn't left to inference.
+ */
+
+export type GetDestinationInfoOutput =
+  | { found: true; destination: DestinationInfo }
+  | { found: false; name: string; knownDestinations: string[]; instruction: string };
+
+export type UpdateItemOutcome = {
+  field: ProfileField;
+  status: "applied" | "unchanged" | "conflict" | "rejected";
+  conflictId?: string;
+  message: string;
+};
+export type UpdateProfileOutput = { results: UpdateItemOutcome[] };
+
+export type FlagConflictOutput =
+  | { status: "conflict"; conflictId: string; instruction: string }
+  | { status: "rejected"; reason: string };
+
+export type ResolveConflictOutput =
+  | { status: "resolved"; conflictId: string; action: "approve" | "keep"; instruction: string }
+  | { status: "rejected"; reason: string };
+
+/** Tool name → input/output, for typing tool parts in `ChatUIMessage`. */
+export type ChatTools = {
+  getDestinationInfo: { input: z.infer<typeof GetDestinationInfoInputSchema>; output: GetDestinationInfoOutput };
+  updateProfile: { input: UpdateProfileInput; output: UpdateProfileOutput };
+  flagConflict: { input: FlagConflictInput; output: FlagConflictOutput };
+  resolveConflict: { input: ResolveConflictInput; output: ResolveConflictOutput };
+};
