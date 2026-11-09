@@ -1,4 +1,4 @@
-import { APICallError } from "ai";
+import { APICallError, RetryError } from "ai";
 import { describe, expect, it } from "vitest";
 import { classifyProviderError, readLlmConfig } from "./provider";
 
@@ -54,6 +54,11 @@ describe("classifyProviderError", () => {
     [404, "provider_error"],
   ])("HTTP %i -> %s", (status, code) => {
     expect(classifyProviderError(apiError(status)).code).toBe(code);
+  });
+
+  it("unwraps the SDK's RetryError: a 429 after retries is still rate_limited", () => {
+    const wrapped = new RetryError({ message: "failed after 2 attempts", reason: "maxRetriesExceeded", errors: [apiError(429)] });
+    expect(classifyProviderError(wrapped).code).toBe("rate_limited");
   });
 
   it("anything else is a provider error with a generic message (no internals leaked)", () => {

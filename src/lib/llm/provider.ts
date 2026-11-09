@@ -1,6 +1,6 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { APICallError, type LanguageModel } from "ai";
+import { APICallError, RetryError, type LanguageModel } from "ai";
 import type { ApiError } from "@/lib/contracts";
 
 /*
@@ -69,7 +69,9 @@ export function createModel(config: LlmConfig): LanguageModel {
  * user and never include the raw error, which can contain URLs or internals.
  */
 export function classifyProviderError(err: unknown): ErrorBody {
-  const status = APICallError.isInstance(err) ? err.statusCode : undefined;
+  // After retries the SDK throws a RetryError wrapping the last real failure.
+  const cause = RetryError.isInstance(err) ? err.lastError : err;
+  const status = APICallError.isInstance(cause) ? cause.statusCode : undefined;
   if (status === 401 || status === 403) {
     return {
       code: "invalid_credentials",
