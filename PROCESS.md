@@ -44,6 +44,17 @@ Planning decisions (made before writing code):
   - *Decision:* a baseline (A1) is built into Phase 2 rather than left for polish: keyboard-only use, labelled controls, screen-reader announcements.
   - *Key choice:* streamed replies are announced only once complete, never token by token, because a screen reader would otherwise read out every fragment.
   - *Voice and audio:* judged not to fit 2 hours (uneven browser support, plus its own approval safety rule). It goes in the future plan in three stages: dictation, read aloud, full voice mode. Voice text always goes through the existing chat path.
+- **Contract refinements made while writing Phase 0** (the plan was updated to match):
+  - *One data part instead of four.* The plan had `profile-updated`, `conflict-detected`, `destination-looked-up` and `error`. Now there's a single **transient** `data-profile` part carrying a full snapshot plus a `changes` summary.
+    - Transient means it isn't added to message history, so snapshots aren't echoed back to the server every turn.
+    - A snapshot instead of a diff can't drift out of sync.
+    - Destination lookups already appear as the SDK's typed tool parts.
+    - Errors use the SDK's error channel and `ApiError`.
+  - *LLM tool input is looser than the domain model, on purpose.* The tool accepts `{ field, op, value, evidence }` with any primitive value. The server checks the value against that field's schema and returns a readable `rejected` reason. A strict union of all 15 fields would make a single malformed item fail the whole tool call, and weaker models are prone to that.
+  - *Updates are batched.* `updateProfile` takes a list of `updates`, so a message with several preferences needs one tool call instead of five. This helps the "extract everything" interview style (B4) on less reliable models.
+  - *A conflict stores the full resulting value.* For a `change` conflict, `proposedValue` is what the field becomes on approval (e.g. `["vegetarian"] → []`), not the operation. The card can show "from X to Y", and applying the change is one assignment.
+  - *Provenance is per field, not per list item* (last write wins). It's simpler, at the cost of explaining *which* item in a list came from where.
+  - *`MergeResult` and `ProfileUpdateProposal` are TypeScript types only, with no zod schemas.* They never cross a runtime boundary, so validating them again would add nothing.
 - **Chat history:** not persisted; only the profile is (which is all the requirements ask for). After a reload the chat starts fresh, and its greeting references the saved profile.
 
 ## Manual Review and Verification

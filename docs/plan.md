@@ -123,7 +123,7 @@ Each boundary gets a **zod schema plus an inferred TS type**, defined in one pla
 | `ConflictStatus` | shared | `'pending' \| 'approved' \| 'kept' \| 'superseded'` |
 | `MergeResult` | merge logic → caller | Discriminated union: `applied` (only when the field was empty or a list item was appended) \| `unchanged` \| `conflict` \| `rejected` |
 | `ChatRequest` | client → `POST /api/chat` | Message history (user input is validated). |
-| Chat stream events | server → client | Text deltas plus typed data parts: `profile-updated`, `conflict-detected`, `destination-looked-up`, `error` |
+| Chat stream events | server → client | Text deltas, the SDK's typed tool parts (so a destination lookup is visible without a custom part), and **one** transient `data-profile` part: a full `ProfileView` snapshot plus `changes` (updated fields, new conflict IDs) for announcements. *Refined in Phase 0 from four planned parts; see PROCESS.md.* |
 | `ResolveConflictRequest` | client → `POST /api/profile/conflicts/:id` | `{ action: 'approve' } \| { action: 'keep' } \| { action: 'clarify', note: string }` |
 | `ResolveConflictToolInput` | LLM `resolveConflict` tool input → server | `{ conflictId, action: 'approve' \| 'keep', evidence }`. `evidence` must appear word for word in the latest user message (Q3). |
 | `ChatUIMessage` | client ↔ `/api/chat` | The AI SDK `UIMessage`, typed with our data-part schemas (Q2). It's the single type for the stream on both sides. |
