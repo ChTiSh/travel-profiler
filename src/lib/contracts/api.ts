@@ -44,6 +44,10 @@ export const ApiErrorCodeSchema = z.enum([
   "conflict_not_pending",
   "missing_credentials",
   "invalid_credentials",
+  /** Env vars present but unusable (unknown provider, malformed base URL). */
+  "misconfigured",
+  /** Common with free models; worth its own message ("wait a minute") rather than a generic failure. */
+  "rate_limited",
   "provider_error",
   "internal",
 ]);
