@@ -56,6 +56,20 @@ describe("classifyProviderError", () => {
     expect(classifyProviderError(apiError(status)).code).toBe(code);
   });
 
+  it("a daily quota 429 says so, instead of 'wait a minute'", () => {
+    const daily = new APICallError({
+      message: "Rate limit exceeded: free-models-per-day",
+      url: "https://example.test",
+      requestBodyValues: {},
+      statusCode: 429,
+      responseBody: '{"error":{"message":"Rate limit exceeded: free-models-per-day. Add 10 credits..."}}',
+    });
+    const r = classifyProviderError(daily);
+    expect(r.code).toBe("rate_limited");
+    expect(r.message).toMatch(/daily/i);
+    expect(r.message).not.toMatch(/minute/i);
+  });
+
   it("unwraps the SDK's RetryError: a 429 after retries is still rate_limited", () => {
     const wrapped = new RetryError({ message: "failed after 2 attempts", reason: "maxRetriesExceeded", errors: [apiError(429)] });
     expect(classifyProviderError(wrapped).code).toBe("rate_limited");

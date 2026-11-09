@@ -79,6 +79,14 @@ export function classifyProviderError(err: unknown): ErrorBody {
     };
   }
   if (status === 429) {
+    const detail = `${(cause as APICallError).message} ${(cause as APICallError).responseBody ?? ""}`;
+    if (/per[-_ ]?day|daily/i.test(detail)) {
+      return {
+        code: "rate_limited",
+        message:
+          "The daily request quota for this model or key is used up. It resets daily; or switch LLM_MODEL / LLM_PROVIDER, or add credits with your provider.",
+      };
+    }
     return {
       code: "rate_limited",
       message: "The model is rate-limited right now (common with free models). Wait a minute and try again.",
