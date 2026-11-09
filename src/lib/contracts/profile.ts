@@ -79,3 +79,41 @@ export const ProfileValueSchema = z.union([z.string(), z.number(), z.array(z.str
 export type ProfileValue = z.infer<typeof ProfileValueSchema>;
 
 export const EMPTY_PROFILE: TravelProfile = TravelProfileSchema.parse({});
+
+/** Fields whose values come from a fixed vocabulary, for formatting-only normalization ("mid-range" → "midRange"). */
+export const ENUM_OPTIONS: Partial<Record<ProfileField, readonly string[]>> = {
+  budgetTier: BudgetTierSchema.options,
+  dailyPace: DailyPaceSchema.options,
+  companions: CompanionSchema.options,
+  preferredSeasons: SeasonSchema.options,
+};
+
+const oneOf = (options: readonly string[]) => options.map((o) => `"${o}"`).join(" | ");
+
+/**
+ * What each field means and which values it accepts, written for the model.
+ * Built from the same enums as the schema so it can't drift; a `Record` over
+ * every field makes a missing entry a compile error. Without this, models
+ * reasonably send "mid-range" / "slow" and get rejected (see the benchmark).
+ */
+export const FIELD_GUIDE: Record<ProfileField, string> = {
+  homeAirport: "single value: home airport, IATA code if known (e.g. SEA)",
+  budgetTier: `single value: one of ${oneOf(BudgetTierSchema.options)}`,
+  dailyBudgetUSD: "single value: a number, US dollars per day",
+  dailyPace: `single value: one of ${oneOf(DailyPaceSchema.options)} (relaxed = slow, few activities; packed = many)`,
+  interests: "list: e.g. food, hiking, museums",
+  dietary: "list: e.g. vegetarian, nut allergy",
+  companions: `list of ${oneOf(CompanionSchema.options)}`,
+  preferredSeasons: `list of ${oneOf(SeasonSchema.options)}`,
+  splurgePriorities: "list: what's worth paying more for, e.g. fine dining, direct flights",
+  climatePreference: "list: e.g. mild weather, avoids humidity",
+  accommodation: "list: e.g. boutique hotels, hostels",
+  accessibilityAndMobility: "list: only what the user states, never inferred",
+  destinationsOfInterest: "list: places the user wants to visit",
+  pastDestinations: "list: places the user has already visited",
+  dealBreakers: "list: hard no's, e.g. red-eye flights, shared bathrooms",
+};
+
+export function describeFields(): string {
+  return PROFILE_FIELDS.map((f) => `- ${f}: ${FIELD_GUIDE[f]}`).join("\n");
+}

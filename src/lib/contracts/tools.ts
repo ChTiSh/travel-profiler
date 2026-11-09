@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ProfileFieldSchema } from "./profile";
+import { ProfileFieldSchema, describeFields } from "./profile";
 
 /*
  * LLM-facing tool input schemas. These are deliberately looser than the domain
@@ -21,7 +21,7 @@ export const GetDestinationInfoInputSchema = z.object({
 });
 
 export const ProfileUpdateItemSchema = z.object({
-  field: ProfileFieldSchema,
+  field: ProfileFieldSchema.describe(`Profile field. Fields and accepted values:\n${describeFields()}`),
   op: z
     .enum(["set", "add", "remove"])
     .describe(

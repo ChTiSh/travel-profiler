@@ -55,6 +55,25 @@ describe("parseUpdateItem", () => {
     expect(parseUpdateItem(item({ field: "dailyPace", op: "set", value: ["relaxed", "packed"] })).ok).toBe(false);
   });
 
+  it("normalizes enum formatting only: 'mid-range' / 'Mid Range' are spellings of midRange", () => {
+    for (const value of ["mid-range", "Mid Range", "midrange", "MID_RANGE"]) {
+      expect(parseUpdateItem(item({ field: "budgetTier", op: "set", value }))).toMatchObject({
+        ok: true,
+        proposal: { value: "midRange" },
+      });
+    }
+    expect(parseUpdateItem(item({ field: "companions", op: "add", value: ["Family"] }))).toMatchObject({
+      ok: true,
+      proposal: { items: ["family"] },
+    });
+  });
+
+  it("does not guess meaning: 'slow' is rejected, and the reason lists the accepted values", () => {
+    const r = parseUpdateItem(item({ field: "dailyPace", op: "set", value: "slow" }));
+    expect(r.ok).toBe(false);
+    expect(!r.ok && r.reason).toMatch(/relaxed/);
+  });
+
   it("normalizes airport codes to upper case", () => {
     const r = parseUpdateItem(item({ field: "homeAirport", op: "set", value: "sea" }));
     expect(r.ok && r.proposal).toMatchObject({ value: "SEA" });

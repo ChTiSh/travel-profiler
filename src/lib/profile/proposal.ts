@@ -1,4 +1,6 @@
 import {
+  ENUM_OPTIONS,
+  FIELD_GUIDE,
   TravelProfileSchema,
   isSingleValueField,
   type ProfileField,
@@ -39,6 +41,7 @@ export function parseUpdateItem(item: ProfileUpdateItem): ParsedUpdate {
     if (field === "homeAirport" && typeof value === "string" && /^[a-z]{3}$/i.test(value.trim())) {
       value = value.trim().toUpperCase();
     }
+    if (typeof value === "string") value = matchEnumSpelling(field, value);
 
     const parsed = schema.safeParse(value);
     if (!parsed.success || parsed.data === undefined || Array.isArray(parsed.data)) {
@@ -47,13 +50,24 @@ export function parseUpdateItem(item: ProfileUpdateItem): ParsedUpdate {
     return { ok: true, proposal: { field, op: "set", value: parsed.data, evidence } };
   }
 
-  const items = Array.isArray(item.value) ? item.value : [item.value];
-  const parsed = schema.safeParse(items.map(String));
+  const items = (Array.isArray(item.value) ? item.value : [item.value]).map((v) => matchEnumSpelling(field, String(v)));
+  const parsed = schema.safeParse(items);
   if (!parsed.success || !Array.isArray(parsed.data)) return reject(issueMessage(field, parsed.error));
   if (parsed.data.length === 0) return reject(`No items given for "${field}".`);
   return { ok: true, proposal: { field, op, items: parsed.data, evidence } };
 }
 
+/**
+ * Maps a different *spelling* of an enum option to the option ("Mid Range" → "midRange").
+ * Never maps meaning ("slow" → "relaxed"); that's the model's call, guided by FIELD_GUIDE.
+ */
+function matchEnumSpelling(field: ProfileField, value: string): string {
+  const options = ENUM_OPTIONS[field];
+  if (!options) return value;
+  const key = (s: string) => s.toLowerCase().replace(/[\s_-]/g, "");
+  return options.find((o) => key(o) === key(value)) ?? value;
+}
+
 function issueMessage(field: ProfileField, error: { issues: { message: string }[] } | undefined): string {
-  return `Invalid value for "${field}": ${error?.issues[0]?.message ?? "unexpected shape"}.`;
+  return `Invalid value for "${field}": ${error?.issues[0]?.message ?? "unexpected shape"}. Accepted: ${FIELD_GUIDE[field]}.`;
 }
