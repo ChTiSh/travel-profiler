@@ -55,6 +55,14 @@ Planning decisions (made before writing code):
   - *A conflict stores the full resulting value.* For a `change` conflict, `proposedValue` is what the field becomes on approval (e.g. `["vegetarian"] → []`), not the operation. The card can show "from X to Y", and applying the change is one assignment.
   - *Provenance is per field, not per list item* (last write wins). It's simpler, at the cost of explaining *which* item in a list came from where.
   - *`MergeResult` and `ProfileUpdateProposal` are TypeScript types only, with no zod schemas.* They never cross a runtime boundary, so validating them again would add nothing.
+- **Phase 1 decisions** (found while writing the tests):
+  - *List fields also accept `set`.* With only `add`/`remove`, "I'm vegan now" would either be applied as an `add` (silently leaving vegetarian + vegan) or split into two calls where half applies at once. A `set` that only adds items removes nothing, so it's applied like an `add`.
+  - *Approving a stale conflict supersedes it.* If the field changed after the conflict was raised, approving its old `proposedValue` would silently drop the newer change. Instead the conflict is superseded and the agent re-asks.
+  - *A contradiction can't be approved directly.* There's no value to apply, so the agent has to ask what should change.
+  - *The chat-approval quote match is whole-word.* "yes" isn't found in "eyes". Fuzzy matching was rejected, because it would hand the judgment back to the model.
+  - *Destination lookup is exact, never fuzzy.* I removed "Iceland" as an alias for Reykjavík: a country isn't its capital, and returning the wrong place's facts is worse than `null`.
+  - *Store updates run one at a time.* The model can run tools in parallel within one turn. I verified the concurrency test fails when the queue is bypassed. A corrupt store file is moved aside, never deleted.
+- **Provider env vars (option A):** the generic `LLM_API_KEY` / `LLM_MODEL` / `LLM_BASE_URL` from the existing `.env.example`, plus `LLM_PROVIDER` (`anthropic` | `openai-compatible`). Benchmarking an OpenRouter model later is then a config change, not a code change.
 - **Chat history:** not persisted; only the profile is (which is all the requirements ask for). After a reload the chat starts fresh, and its greeting references the saved profile.
 
 ## Manual Review and Verification

@@ -237,7 +237,7 @@ Commits: one per module, e.g. `feat(profile): conflict-aware merge with tests`
 ## Phase 2: Wire the core loop (functional end to end)
 
 1. **Provider adapter** `lib/llm/provider.ts`
-   - Reads `LLM_PROVIDER` and `LLM_MODEL`, plus the provider key.
+   - Reads `LLM_PROVIDER` (`anthropic` | `openai-compatible`), `LLM_MODEL`, `LLM_API_KEY` and an optional `LLM_BASE_URL` (option A, agreed). Names match the existing `.env.example`.
    - Returns a typed `missing_credentials` error instead of throwing deep inside a request.
    - Anthropic is the first provider.
 2. **Agent tools** `lib/agent/tools.ts`
