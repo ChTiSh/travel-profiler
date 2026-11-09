@@ -1,14 +1,6 @@
-import { CORE_FIELDS, describeFields, type ProfileView, type TravelProfile } from "@/lib/contracts";
+import { describeFields, type ProfileView } from "@/lib/contracts";
 import { DESTINATIONS } from "@/lib/destinations";
-import { formatValue } from "@/lib/profile/service";
-
-/** Core fields still empty: what the interview should ask about next (B4). */
-export function missingCoreFields(profile: TravelProfile): string[] {
-  return CORE_FIELDS.filter((f) => {
-    const v = profile[f];
-    return Array.isArray(v) ? v.length === 0 : v === undefined;
-  });
-}
+import { formatValue, missingCoreFields } from "@/lib/profile/format";
 
 /**
  * System instructions, rebuilt each request from the stored profile so the

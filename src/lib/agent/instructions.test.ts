@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_PROFILE, type ProfileView } from "@/lib/contracts";
-import { buildInstructions, missingCoreFields } from "./instructions";
+import { missingCoreFields } from "@/lib/profile/format";
+import { buildInstructions } from "./instructions";
 
 const view = (over: Partial<ProfileView> = {}): ProfileView => ({
   profile: EMPTY_PROFILE,

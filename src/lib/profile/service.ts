@@ -5,12 +5,12 @@ import type {
   ProfileField,
   ProfileState,
   ProfileUpdateItem,
-  ProfileValue,
   ProfileView,
   ResolveConflictRequest,
   UpdateItemOutcome,
 } from "@/lib/contracts";
 import { flagContradiction, mergeProposal, resolveConflict, type MergeContext, type ResolveOutcome } from "./merge";
+import { formatValue } from "./format";
 import { parseUpdateItem } from "./proposal";
 import type { ProfileStore } from "./store";
 
@@ -122,11 +122,6 @@ export function createProfileService(store: ProfileStore, ctx: MergeContext = sy
 
 const noChanges = (): ProfileChanges => ({ updatedFields: [], newConflictIds: [] });
 
-export function formatValue(value: ProfileValue | undefined): string {
-  if (value === undefined) return "(not set)";
-  if (Array.isArray(value)) return value.length ? value.join(", ") : "(none)";
-  return String(value);
-}
 
 /** What the model is told, so it surfaces the conflict instead of treating the change as done. */
 function describeConflictForModel(conflict: ProfileConflict): string {
